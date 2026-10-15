@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, ClipboardList, LoaderCircle, RefreshCw, Search, X } from 'lucide-react';
+import { Check, ClipboardList, LoaderCircle, Pencil, RefreshCw, Save, Search, X } from 'lucide-react';
 import { adminApi } from '../../../services/api';
 
 interface ListingRequest {
@@ -46,6 +46,7 @@ export default function ListingRequests() {
   const [message, setMessage] = useState('');
   const [statusFilter, setStatusFilter] = useState('PENDING');
   const [search, setSearch] = useState('');
+  const [editingRequest, setEditingRequest] = useState<ListingRequest | null>(null);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -95,6 +96,40 @@ export default function ListingRequests() {
       await loadRequests();
     } catch (err) {
       setError(err instanceof Error ? err.message : `Unable to ${action} this request.`);
+    } finally {
+      setWorkingId(null);
+    }
+  };
+
+  const saveEdits = async (approveAfterSave = false) => {
+    if (!editingRequest) return;
+    setWorkingId(editingRequest.id);
+    setError('');
+    setMessage('');
+    try {
+      await adminApi.updateListingRequest(editingRequest.id, {
+        propertyType: editingRequest.propertyType,
+        transactionType: editingRequest.transactionType,
+        location: editingRequest.location,
+        district: editingRequest.district || '',
+        sector: editingRequest.sector || '',
+        propertySize: editingRequest.propertySize ?? '',
+        sizeUnit: editingRequest.sizeUnit || '',
+        bedrooms: editingRequest.bedrooms ?? '',
+        bathrooms: editingRequest.bathrooms ?? '',
+        description: editingRequest.description || '',
+        price: editingRequest.price ?? '',
+      });
+      if (approveAfterSave) {
+        await adminApi.approveListingRequest(editingRequest.id);
+        setMessage('Changes saved and property published.');
+      } else {
+        setMessage('Listing request updated. You can approve it when ready.');
+      }
+      setEditingRequest(null);
+      await loadRequests();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to save listing changes.');
     } finally {
       setWorkingId(null);
     }
@@ -165,12 +200,41 @@ export default function ListingRequests() {
                 {!!request.images?.length && <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">{request.images.map((image) => <a key={image.imageUrl} href={image.imageUrl} target="_blank" rel="noreferrer"><img src={image.imageUrl} alt="Submitted property" className="aspect-square w-full rounded-lg border border-slate-200 object-cover" /></a>)}</div>}
 
                 {isPending && <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+                  <button onClick={() => setEditingRequest({ ...request })} disabled={busy} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"><Pencil className="h-4 w-4" />Edit before approving</button>
                   <button onClick={() => void updateRequest(request, 'reject')} disabled={busy} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"><X className="h-4 w-4" />Reject</button>
                   <button onClick={() => void updateRequest(request, 'approve')} disabled={busy} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"><Check className="h-4 w-4" />Approve &amp; publish</button>
                 </div>}
               </article>
             );
           })}
+        </div>
+      )}
+
+      {editingRequest && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/50 p-4">
+          <div className="mx-auto my-6 w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl sm:p-6">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+              <div><h2 className="text-lg font-semibold text-slate-900">Edit listing request</h2><p className="mt-1 text-sm text-slate-500">Review details before creating the public property listing.</p></div>
+              <button onClick={() => setEditingRequest(null)} disabled={workingId === editingRequest.id} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="grid gap-4 py-5 sm:grid-cols-2">
+              {([
+                ['propertyType', 'Property type'], ['transactionType', 'Transaction type'], ['location', 'Location'], ['district', 'District'], ['sector', 'Sector'], ['propertySize', 'Size'], ['sizeUnit', 'Size unit'], ['bedrooms', 'Bedrooms'], ['bathrooms', 'Bathrooms'], ['price', 'Price (RWF)'],
+              ] as const).map(([field, label]) => (
+                <label key={field} className="text-sm font-medium text-slate-700">{label}
+                  <input value={editingRequest[field] ?? ''} onChange={(event) => setEditingRequest({ ...editingRequest, [field]: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+                </label>
+              ))}
+              <label className="sm:col-span-2 text-sm font-medium text-slate-700">Description
+                <textarea rows={4} value={editingRequest.description ?? ''} onChange={(event) => setEditingRequest({ ...editingRequest, description: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+              </label>
+            </div>
+            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-4">
+              <button onClick={() => setEditingRequest(null)} disabled={workingId === editingRequest.id} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+              <button onClick={() => void saveEdits(false)} disabled={workingId === editingRequest.id} className="inline-flex items-center gap-2 rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-60"><Save className="h-4 w-4" />Save changes</button>
+              <button onClick={() => void saveEdits(true)} disabled={workingId === editingRequest.id} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"><Check className="h-4 w-4" />Save &amp; approve</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

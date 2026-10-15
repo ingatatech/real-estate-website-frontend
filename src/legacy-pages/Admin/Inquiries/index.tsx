@@ -13,18 +13,29 @@ import {
   Phone,
   CheckCircle2,
   Clock,
+  Save,
 } from 'lucide-react';
 import { adminApi } from '../../../services/api';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 
 interface Inquiry {
   id: string;
   name: string;
   email: string;
   phone?: string | null;
-  message: string;
+  inquiry: string;
   status?: string;
   property?: { title: string } | null;
+  agent?: { id: string; name: string; email?: string | null } | null;
+  privateNotes?: string;
+  nextFollowUpDate?: string | null;
   createdAt: string;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  email?: string | null;
 }
 
 interface ApiResponse {
@@ -41,20 +52,6 @@ interface ApiResponse {
   message?: string;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-700',
-  READ: 'bg-blue-100 text-blue-700',
-  RESOLVED: 'bg-green-100 text-green-700',
-  CLOSED: 'bg-gray-100 text-gray-500',
-};
-
-const formatLabel = (value: string) => {
-  return value
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-};
-
 const formatDate = (date: string) => {
   if (!date) return '—';
   const parsedDate = new Date(date);
@@ -70,6 +67,8 @@ export default function Inquiries() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [workflowSaving, setWorkflowSaving] = useState(false);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -115,13 +114,22 @@ export default function Inquiries() {
     fetchInquiries();
   }, [page, searchTerm, statusFilter]);
 
+  useEffect(() => {
+    adminApi.getAgents()
+      .then((response: unknown) => {
+        const result = response as { data?: Agent[]; agents?: Agent[] };
+        setAgents(result.data ?? result.agents ?? []);
+      })
+      .catch(() => setAgents([]));
+  }, []);
+
   const filteredInquiries = useMemo(() => {
     return inquiries.filter((item) => {
       const matchesSearch =
         !searchTerm ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.message.toLowerCase().includes(searchTerm.toLowerCase());
+        item.inquiry.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = !statusFilter || item.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -153,6 +161,25 @@ export default function Inquiries() {
     } catch (err) {
       console.error('Failed to update inquiry status:', err);
       setError(err instanceof Error ? err.message : 'Failed to update inquiry status.');
+    }
+  };
+
+  const saveWorkflow = async () => {
+    if (!selectedInquiry) return;
+    try {
+      setWorkflowSaving(true);
+      setError('');
+      const response = await adminApi.updateInquiry(selectedInquiry.id, {
+        agentId: selectedInquiry.agent?.id || null,
+        privateNotes: selectedInquiry.privateNotes || '',
+        nextFollowUpDate: selectedInquiry.nextFollowUpDate || null,
+      }) as { data?: Inquiry };
+      if (response.data) setSelectedInquiry(response.data);
+      await fetchInquiries();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to save the inquiry workflow.');
+    } finally {
+      setWorkflowSaving(false);
     }
   };
 
@@ -208,7 +235,7 @@ export default function Inquiries() {
                 setSearchTerm(event.target.value);
                 setPage(1);
               }}
-              placeholder="Search by client name, email, or message..."
+              placeholder="Search by client name, email, or inquiry..."
               className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
@@ -294,15 +321,13 @@ export default function Inquiries() {
                           Property: {item.property.title}
                         </div>
                       )}
-                      <p className="line-clamp-1 text-sm text-slate-600">{item.message}</p>
+                      <p className="line-clamp-1 text-sm text-slate-600">{item.inquiry}</p>
                     </td>
                     <td className="whitespace-nowrap px-5 py-4">
                       <select
                         value={item.status || 'PENDING'}
                         onChange={(e) => handleStatusUpdate(item.id, e.target.value)}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 ${
-                          STATUS_COLORS[item.status ?? 'PENDING'] ?? 'bg-slate-100 text-slate-600'
-                        }`}
+                        className="rounded-lg px-2.5 py-1 text-xs font-medium border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                       >
                         <option value="PENDING">Pending</option>
                         <option value="READ">Read</option>
@@ -318,14 +343,14 @@ export default function Inquiries() {
                         <button
                           type="button"
                           onClick={() => setSelectedInquiry(item)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
                         >
                           View
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeleteId(item.id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                          className="inline-flex items-center gap-2 rounded-lg border border-rose-300 bg-white px-3 py-2 text-sm font-medium text-rose-600 shadow-sm hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -420,14 +445,64 @@ export default function Inquiries() {
               )}
 
               <div>
-                <span className="text-xs font-medium uppercase text-slate-400">Message</span>
+                <span className="text-xs font-medium uppercase text-slate-400">Inquiry</span>
                 <div className="mt-1 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 whitespace-pre-wrap">
-                  {selectedInquiry.message}
+                  {selectedInquiry.inquiry}
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <div>
+                  <label htmlFor="assigned-agent" className="text-xs font-medium uppercase text-slate-400">Assigned agent</label>
+                  <select
+                    id="assigned-agent"
+                    value={selectedInquiry.agent?.id || ''}
+                    onChange={(event) => setSelectedInquiry((current) => current ? {
+                      ...current,
+                      agent: agents.find((agent) => agent.id === event.target.value) || null,
+                    } : current)}
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  >
+                    <option value="">Unassigned</option>
+                    {agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}{agent.email ? ` — ${agent.email}` : ''}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="follow-up-date" className="text-xs font-medium uppercase text-slate-400">Follow-up date</label>
+                  <input
+                    id="follow-up-date"
+                    type="date"
+                    value={selectedInquiry.nextFollowUpDate ? selectedInquiry.nextFollowUpDate.slice(0, 10) : ''}
+                    disabled={!selectedInquiry.agent}
+                    onChange={(event) => setSelectedInquiry((current) => current ? { ...current, nextFollowUpDate: event.target.value || null } : current)}
+                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="internal-notes" className="text-xs font-medium uppercase text-slate-400">Internal notes</label>
+                  <textarea
+                    id="internal-notes"
+                    rows={4}
+                    maxLength={5000}
+                    disabled={!selectedInquiry.agent}
+                    value={selectedInquiry.privateNotes || ''}
+                    onChange={(event) => setSelectedInquiry((current) => current ? { ...current, privateNotes: event.target.value } : current)}
+                    placeholder={selectedInquiry.agent ? 'Notes visible to the assigned agent and administrators.' : 'Assign an agent to add notes.'}
+                    className="mt-1 w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  />
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-3 border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                onClick={() => void saveWorkflow()}
+                disabled={workflowSaving}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                <Save className="h-4 w-4" /> {workflowSaving ? 'Saving...' : 'Save workflow'}
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedInquiry(null)}
@@ -451,7 +526,7 @@ export default function Inquiries() {
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Delete inquiry?</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  This action cannot be undone. The client message will be permanently deleted.
+                  This action cannot be undone. The client inquiry will be permanently deleted.
                 </p>
               </div>
             </div>

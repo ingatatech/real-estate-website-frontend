@@ -3,7 +3,7 @@
 import { FormEvent, useState, useEffect } from 'react';
 import { Link, useSearchParams } from '@/navigation/legacy-router';
 import api from '../../services/api';
-import { rwandaDistricts, getSectors } from '../../data/rwandaDistricts';
+import { RWANDA_DISTRICTS, getSectorsByDistrict } from '../../data/rwandaAdministrativeDivisions';
 import { TestPropertyBadge, TestPropertyNotice } from '../../components/property/TestPropertyBadge';
 
 type SearchForm = {
@@ -87,7 +87,7 @@ export default function PropertySearch() {
       const updated = { ...current, [name]: value };
       if (name === 'district') {
         updated.sector = '';
-        setAvailableSectors(getSectors(value));
+        setAvailableSectors(getSectorsByDistrict(value));
       }
       return updated;
     });
@@ -148,7 +148,7 @@ export default function PropertySearch() {
 
   const applySavedSearch = async (savedSearch: SavedPropertySearch) => {
     setForm(savedSearch.filters);
-    setAvailableSectors(getSectors(savedSearch.filters.district));
+    setAvailableSectors(getSectorsByDistrict(savedSearch.filters.district));
     setSaveMessage('');
     setError('');
     setLoading(true);
@@ -199,7 +199,7 @@ export default function PropertySearch() {
         <label className="block text-sm font-medium text-slate-700">District
           <select value={form.district} onChange={(event) => update('district', event.target.value)} className="search-input mt-1">
             <option value="">Any district</option>
-            {Object.values(rwandaDistricts).flatMap(p => Object.keys(p)).sort().map(d => <option key={d} value={d}>{d}</option>)}
+            {RWANDA_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
         </label>
         {/* Sector — only enabled once district selected */}

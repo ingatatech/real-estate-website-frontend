@@ -82,7 +82,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link className="hover:text-white transition-colors" href="/legal/privacy-policy">Privacy Policy</Link></li>
               <li><Link className="hover:text-white transition-colors" href="/legal/terms-and-conditions">Terms & Conditions</Link></li>
-              <li><Link className="hover:text-white transition-colors" href="/legal/property-listing-disclaimer">Property Listing Disclaimer</Link></li>
+              <li><Link className="hover:text-white transition-colors" href="/legal/property-disclaimer">Disclaimer</Link></li>
               <li><Link className="hover:text-white transition-colors" href="/legal/cookie-policy">Cookie Policy</Link></li>
             </ul>
           </div>

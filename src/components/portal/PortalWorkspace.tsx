@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { portalApi } from '@/services/api';
+import { RWANDA_DISTRICTS, getSectorsByDistrict } from '@/data/rwandaAdministrativeDivisions';
 
 type Role = 'agent' | 'property_manager' | 'content_editor' | 'admin';
 type IconType = typeof Home;
@@ -560,6 +561,13 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
         data[field.key] = String(value);
       }
     }
+    // Clear sector if district changes and sector doesn't belong to new district
+    if (data.district && data.sector && typeof data.district === 'string' && typeof data.sector === 'string') {
+      const sectors = getSectorsByDistrict(data.district);
+      if (!sectors.includes(data.sector)) {
+        data.sector = '';
+      }
+    }
     try {
       if (editing) {
         const id = displayValue(editing.id);
@@ -693,7 +701,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
       id: `inquiry-${String(inquiry.id)}`,
       at: String(inquiry.createdAt || ''),
       label: `Inquiry from ${String(inquiry.name || 'a client')}`,
-      detail: String(inquiry.message || ''),
+      detail: String(inquiry.inquiry || ''),
       status: String(inquiry.status || 'NEW'),
       type: 'inquiry' as const,
       href: '/portal/agent/inquiries',
@@ -825,10 +833,10 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                   <p className="truncate text-xs text-slate-300">{user?.email}</p>
                 </div>
               </div>
-              <button type="button" onClick={() => { setProfileOpen((open) => !open); setProfileError(''); setProfileSaved(false); }} className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/20 px-3 text-sm font-semibold text-white transition hover:bg-white/10">
+              <button type="button" onClick={() => { setProfileOpen((open) => !open); setProfileError(''); setProfileSaved(false); }} className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/20 px-3 text-sm font-semibold text-white transition hover:bg-white/50">
                 <Pencil className="h-4 w-4" /> Edit profile
               </button>
-              <Link href="/portal/property-manager/properties" className="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-400 px-4 text-sm font-bold text-emerald-950 shadow-sm transition hover:bg-emerald-300">
+              <Link href="/portal/property-manager/properties" className="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-400">
                 <Plus className="h-4 w-4" /> Add Property
               </Link>
             </div>
@@ -856,7 +864,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
             <label className="text-sm font-medium text-slate-700">Phone<input name="phone" defaultValue={user?.phone || ''} type="tel" className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2.5 outline-none focus:border-emerald-500" /></label>
           </div>
           {profileError && <p role="alert" className="mt-3 text-sm text-rose-700">{profileError}</p>}
-          <div className="mt-4 flex justify-end"><button type="submit" disabled={profileSaving} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"><Save className="h-4 w-4" />{profileSaving ? 'Saving…' : 'Save profile'}</button></div>
+          <div className="mt-4 flex justify-end"><button type="submit" disabled={profileSaving} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"><Save className="h-4 w-4" />{profileSaving ? 'Saving…' : 'Save profile'}</button></div>
         </form>
       )}
       {!item && role === 'property_manager' && !loading && !dashboardErrors[managerPropertiesHref] && counts[managerPropertiesHref] === 0 && (
@@ -1006,7 +1014,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                         <p className="truncate text-xs text-slate-500">{String(inquiry.email || '')}</p>
                         <p className="mt-1 text-xs text-rose-600">Follow-up was due {formatPortalDate(inquiry.nextFollowUpDate)}</p>
                       </div>
-                      <Link href="/portal/agent/inquiries" className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Update</Link>
+                      <Link href="/portal/agent/inquiries" className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">Update</Link>
                     </li>
                   ))}
                 </ul>
@@ -1119,7 +1127,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                             <StatusBadge status={String(property.status || 'AVAILABLE')} />
                           </div>
                         </div>
-                        <Link href="/portal/agent/properties" className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">Manage</Link>
+                        <Link href="/portal/agent/properties" className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">Manage</Link>
                       </li>
                     );
                   })}
@@ -1159,7 +1167,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                   {sectionError && failedItem ? (
                     <button type="button" onClick={() => void retryDashboardSection(failedItem)} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:underline"><RefreshCw className="h-3 w-3" /> Retry {failedItem.label.toLowerCase()}</button>
                   ) : (
-                    <Link href={card.href} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800">Open section <ChevronRight className="h-4 w-4" /></Link>
+                    <Link href={card.href} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 focus:outline-none focus:underline">Open section <ChevronRight className="h-4 w-4" /></Link>
                   )}
                 </article>
               );
@@ -1196,7 +1204,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                         <button type="button" onClick={() => void retryDashboardSection(entry)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-rose-700 hover:underline"><RefreshCw className="h-3 w-3" /> Retry</button>
                       </div>
                     ) : (
-                      <Link href={task.href} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:underline">{task.label}<ChevronRight className="h-4 w-4" /></Link>
+                      <Link href={task.href} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 focus:outline-none focus:underline">{task.label}<ChevronRight className="h-4 w-4" /></Link>
                     )}
                   </article>
                 );
@@ -1273,10 +1281,10 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-slate-800">{String(inquiry.name || 'Customer')}</p>
                         <p className="truncate text-xs text-slate-500">{String(property.title || 'Assigned property')} · {String(inquiry.email || '')}</p>
-                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{String(inquiry.message || '')}</p>
+                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{String(inquiry.inquiry || '')}</p>
                         <p className="mt-1 text-xs text-slate-400">{formatPortalDate(inquiry.createdAt)}</p>
                       </div>
-                      <Link href={managerInquiriesHref} className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">View Inquiry</Link>
+                      <Link href={managerInquiriesHref} className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">View Inquiry</Link>
                     </li>;
                   })}
                 </ul>
@@ -1292,20 +1300,34 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                 <div className="p-5 text-sm text-rose-700"><p>{dashboardErrors[managerPropertiesHref]}</p><button type="button" onClick={() => { const entry = managerSectionItems.find((section) => section.href === managerPropertiesHref); if (entry) void retryDashboardSection(entry); }} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold hover:underline"><RefreshCw className="h-3 w-3" /> Retry properties</button></div>
               ) : managerRecentProperties.length ? (
                 <ul className="divide-y divide-slate-100">
-                  {managerRecentProperties.map((property, index) => (
-                    <li key={String(property.id || index)} className="flex items-center gap-3 px-5 py-4 sm:px-6">
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><Home className="h-5 w-5" /></span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-slate-800">{String(property.title || 'Untitled property')}</p>
-                        <p className="flex items-center gap-1 truncate text-xs text-slate-500"><MapPin className="h-3 w-3 shrink-0" />{String(property.location || property.district || 'Location not specified')}</p>
-                        <p className="mt-1 truncate text-xs text-slate-500">{formatMoney(property.price, property.currency)} · Updated {formatPortalDate(property.updatedAt || property.createdAt)}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700">{String(property.status || property.publicationStatus || '—').replace(/_/g, ' ')}</span>
-                        <p className="mt-2"><Link href={managerPropertiesHref} className="text-xs font-semibold text-emerald-700 hover:underline">Manage</Link></p>
-                      </div>
-                    </li>
-                  ))}
+                  {managerRecentProperties.map((property, index) => {
+                    const primaryImage = Array.isArray(property.propertyImages)
+                      ? property.propertyImages.sort((a: unknown, b: unknown) => {
+                          const aIsPrimary = typeof a === 'object' && a !== null && 'isPrimary' in a ? Boolean(a.isPrimary) : false;
+                          const bIsPrimary = typeof b === 'object' && b !== null && 'isPrimary' in b ? Boolean(b.isPrimary) : false;
+                          return Number(bIsPrimary) - Number(aIsPrimary);
+                        })[0]
+                      : null;
+                    const imageUrl = primaryImage && typeof primaryImage === 'object' && 'imageUrl' in primaryImage ? String(primaryImage.imageUrl) : null;
+                    return (
+                      <li key={String(property.id || index)} className="flex items-center gap-3 px-5 py-4 sm:px-6">
+                        {imageUrl ? (
+                          <img src={imageUrl} alt="" className="h-11 w-14 shrink-0 rounded-lg bg-slate-100 object-cover" />
+                        ) : (
+                          <span className="grid h-11 w-14 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-400"><Home className="h-5 w-5" /></span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-slate-800">{String(property.title || 'Untitled property')}</p>
+                          <p className="flex items-center gap-1 truncate text-xs text-slate-500"><MapPin className="h-3 w-3 shrink-0" />{String(property.location || property.district || 'Location not specified')}</p>
+                          <p className="mt-1 truncate text-xs text-slate-500">{formatMoney(property.price, property.currency)} · Updated {formatPortalDate(property.updatedAt || property.createdAt)}</p>
+                        </div>
+                        <div className="text-right">
+                          <StatusBadge status={String(property.status || property.publicationStatus || 'AVAILABLE')} />
+                          <p className="mt-2"><Link href={managerPropertiesHref} className="text-xs font-semibold text-emerald-700 hover:underline">Manage</Link></p>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : <div className="p-8 text-center text-sm text-slate-500">{loading ? 'Loading properties…' : 'No properties are assigned to this workspace yet.'}</div>}
             </article>
@@ -1343,7 +1365,7 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
               <p className="text-sm text-slate-500">{records.length} record{records.length === 1 ? '' : 's'}</p>
               {item.create && !showNew && !editing && (
-                <button type="button" onClick={() => setShowNew(true)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                <button type="button" onClick={() => setShowNew(true)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
                   <Plus className="h-4 w-4" /> Add {item.label.replace(/s$/, '')}
                 </button>
               )}
@@ -1438,18 +1460,18 @@ function PortalPage({ role, item }: { role: Exclude<Role, 'admin'>; item: Portal
                                 type="button"
                                 onClick={() => void approveRecord(record)}
                                 aria-label={`Approve ${recordTitle(record)}`}
-                                className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                               >
                                 <Check className="h-3.5 w-3.5" /> Approve
                               </button>
                             )}
                             {item.fields && item.update && (
-                              <button type="button" onClick={() => { setShowNew(false); setEditing(record); }} aria-label={`Edit ${recordTitle(record)}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                              <button type="button" onClick={() => { setShowNew(false); setEditing(record); }} aria-label={`Edit ${recordTitle(record)}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
                                 <Pencil className="h-3.5 w-3.5" /> Edit
                               </button>
                             )}
                             {item.remove && (
-                              <button type="button" onClick={() => void deleteRecord(record)} aria-label={`${item.removeAction === 'archive' ? 'Archive' : 'Delete'} ${recordTitle(record)}`} className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50">
+                              <button type="button" onClick={() => void deleteRecord(record)} aria-label={`${item.removeAction === 'archive' ? 'Archive' : 'Delete'} ${recordTitle(record)}`} className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-medium text-rose-600 shadow-sm hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
                                 {item.removeAction === 'archive' ? <X className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
                               </button>
                             )}
@@ -1489,6 +1511,33 @@ function RecordForm({
   const [uploadError, setUploadError] = useState('');
   const [optionLists, setOptionLists] = useState<Record<string, Array<{ value: string; label: string }>>>({});
   const [optionError, setOptionError] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [availableSectors, setAvailableSectors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (record?.district && typeof record.district === 'string') {
+      setSelectedDistrict(record.district);
+      setAvailableSectors(getSectorsByDistrict(record.district));
+    }
+  }, [record?.district]);
+
+  useEffect(() => {
+    if (!record) {
+      setSelectedDistrict('');
+      setAvailableSectors([]);
+    }
+  }, [record]);
+
+  const handleDistrictChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newDistrict = e.target.value;
+    setSelectedDistrict(newDistrict);
+    setAvailableSectors(getSectorsByDistrict(newDistrict));
+    // Clear sector input when district changes
+    const sectorInput = document.querySelector('select[name="sector"]') as HTMLSelectElement;
+    if (sectorInput) {
+      sectorInput.value = '';
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -1566,7 +1615,7 @@ function RecordForm({
                 {field.key === 'images' && upload && (
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" className="hidden" onChange={handleFile} />
-                    <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60">
+                    <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">
                       <Upload className="h-4 w-4" /> {uploading ? 'Uploading…' : 'Upload image or video'}
                     </button>
                     <span className="text-xs text-slate-500">Uploaded files are added to this property when you save.</span>
@@ -1579,11 +1628,22 @@ function RecordForm({
           if (field.type === 'select') {
             const options = field.loadOptions
               ? [{ value: '', label: field.required ? 'Select a property' : 'Unassigned' }, ...(optionLists[field.key] || [])]
-              : (field.options || []).map((option) => ({ value: option, label: option ? option.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : 'Not specified' }));
+              : field.key === 'district'
+                ? [{ value: '', label: 'Select district' }, ...RWANDA_DISTRICTS.map(d => ({ value: d, label: d }))]
+                : field.key === 'sector'
+                  ? [{ value: '', label: selectedDistrict ? 'Select sector' : 'Select district first' }, ...availableSectors.map(s => ({ value: s, label: s }))]
+                  : (field.options || []).map((option) => ({ value: option, label: option ? option.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : 'Not specified' }));
             return (
               <label key={field.key} className="text-sm font-medium text-slate-700">
                 {field.label}
-                <select name={field.key} required={field.required} defaultValue={initial || field.options?.[0]} className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500">
+                <select 
+                  name={field.key} 
+                  required={field.required} 
+                  defaultValue={initial || field.options?.[0]} 
+                  disabled={field.key === 'sector' && !selectedDistrict}
+                  onChange={field.key === 'district' ? handleDistrictChange : undefined}
+                  className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                >
                   {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
@@ -1599,8 +1659,8 @@ function RecordForm({
       </div>
       {optionError && <p role="alert" className="mt-3 text-sm text-red-600">{optionError}</p>}
       <div className="mt-4 flex justify-end gap-2">
-        <button type="button" onClick={onCancel} className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-white">Cancel</button>
-        <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
+        <button type="button" onClick={onCancel} className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2">Cancel</button>
+        <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
           <Save className="h-4 w-4" /> {saving ? 'Saving…' : record ? 'Save changes' : 'Create'}
         </button>
       </div>

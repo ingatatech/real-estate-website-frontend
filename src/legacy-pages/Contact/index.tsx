@@ -35,10 +35,10 @@ function ContactForm() {
 }
 
 function InquiryForm() {
-	const [form, setForm] = useState({ propertyId: '', name: '', email: '', phone: '', message: '' });
+	const [form, setForm] = useState({ propertyId: '', name: '', email: '', phone: '', inquiry: '' });
 	const [status, setStatus] = useState('');
 	const submit = async (event: FormEvent) => { event.preventDefault(); try { await api.createInquiry(form); setStatus('Your property inquiry has been sent.'); } catch { setStatus('Unable to send your inquiry.'); } };
-	return <form onSubmit={submit} className="space-y-4"><h2 className="text-2xl font-bold text-brand-navy">Ask about a property</h2>{(['propertyId', 'name', 'email', 'phone', 'message'] as const).map((field) => <label key={field} className="block text-brand-charcoal">{field === 'propertyId' ? 'Property ID or reference' : field}<input required={['name', 'email', 'message'].includes(field)} type={field === 'email' ? 'email' : 'text'} value={form[field]} onChange={(event) => setForm({ ...form, [field]: event.target.value })} className="search-input" /></label>)}<button className="bg-brand-emerald text-brand-white rounded-lg px-6 py-3">Send inquiry</button>{status && <p className="text-brand-emerald">{status}</p>}</form>;
+	return <form onSubmit={submit} className="space-y-4"><h2 className="text-2xl font-bold text-brand-navy">Ask about a property</h2>{(['propertyId', 'name', 'email', 'phone'] as const).map((field) => <label key={field} className="block text-brand-charcoal">{field === 'propertyId' ? 'Property ID or reference' : field}<input required={['name', 'email'].includes(field)} type={field === 'email' ? 'email' : 'text'} value={form[field]} onChange={(event) => setForm({ ...form, [field]: event.target.value })} className="search-input" /></label>)}<label className="block text-brand-charcoal">Message<textarea required value={form.inquiry} onChange={(event) => setForm({ ...form, inquiry: event.target.value })} className="search-input min-h-32" /></label><button className="bg-brand-emerald text-brand-white rounded-lg px-6 py-3">Send inquiry</button>{status && <p className="text-brand-emerald">{status}</p>}</form>;
 }
 
 export default function Contact() {

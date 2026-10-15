@@ -166,6 +166,20 @@ export const api = {
 	createListing: (data: FormData) => request('/listings', { method: 'POST', body: data }),
 	createViewing: (data: unknown) => request('/viewings', { method: 'POST', body: JSON.stringify(data) }),
 	createValuation: (data: unknown) => request('/valuations', { method: 'POST', body: JSON.stringify(data) }),
+
+	// Analytics (public endpoints, no auth required)
+	trackPageView: (data: { pagePath: string; pageTitle?: string; referrer?: string }) =>
+		request('/analytics/page-view', { method: 'POST', body: JSON.stringify(data) }),
+	trackPropertyView: (data: { propertyId: string; sessionDurationSeconds?: number; referrer?: string }) =>
+		request('/analytics/property-view', { method: 'POST', body: JSON.stringify(data) }),
+	trackClickEvent: (data: {
+		eventType: 'CTA' | 'PHONE' | 'EMAIL' | 'WHATSAPP' | 'LINK' | 'BUTTON';
+		propertyId?: string;
+		elementId?: string;
+		elementText?: string;
+		pagePath: string;
+		destinationUrl?: string;
+	}) => request('/analytics/click-event', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 // ─── Admin API ─────────────────────────────────────────────────────────────────
@@ -198,7 +212,7 @@ export const adminApi = {
 	deleteAdminProperty: (id: string) =>
 		authRequest(`/admin/properties/${id}`, { method: 'DELETE' }),
 
-	// Categories
+	// Categories (Property Categories & Unified)
 	getCategories: () => authRequest('/admin/categories'),
 	getAdminCategories: (query?: Record<string, QueryValue>) =>
 		authRequest(`/admin/categories${buildQuery(query)}`),
@@ -212,6 +226,18 @@ export const adminApi = {
 		authRequest(`/admin/categories/${id}`, { method: 'DELETE' }),
 	deleteAdminCategory: (id: string) =>
 		authRequest(`/admin/categories/${id}`, { method: 'DELETE' }),
+
+	// Article Categories
+	getArticleCategories: (query?: Record<string, QueryValue>) =>
+		authRequest(`/admin/article-categories${buildQuery(query)}`),
+	getArticleCategory: (id: string) =>
+		authRequest(`/admin/article-categories/${id}`),
+	createArticleCategory: (data: Record<string, unknown>) =>
+		authRequest('/admin/article-categories', { method: 'POST', body: JSON.stringify(data) }),
+	updateArticleCategory: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/article-categories/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	deleteArticleCategory: (id: string) =>
+		authRequest(`/admin/article-categories/${id}`, { method: 'DELETE' }),
 
 	// Public agent directory is still used to assign an agent to a property.
 	getAgents: () => request('/agents'),
@@ -227,8 +253,22 @@ export const adminApi = {
 	deleteAdminInquiry: (id: string) =>
 		authRequest(`/admin/inquiries/${id}`, { method: 'DELETE' }),
 
+	// Contact Messages
+	getContactMessages: (query?: Record<string, QueryValue>) =>
+		authRequest(`/admin/contact${buildQuery(query)}`),
+	getContactMessage: (id: string) =>
+		authRequest(`/admin/contact/${id}`),
+	updateContactMessage: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/contact/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+	 replyToContactMessage: (id: string, data: { subject: string; message: string }) =>
+		authRequest(`/admin/contact/${id}/reply`, { method: 'POST', body: JSON.stringify(data) }),
+	deleteContactMessage: (id: string) =>
+		authRequest(`/admin/contact/${id}`, { method: 'DELETE' }),
+
 	// Property listing requests
 	getListingRequests: () => authRequest('/admin/listings'),
+	updateListingRequest: (id: string, data: Record<string, unknown>) =>
+		authRequest(`/admin/listings/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
 	approveListingRequest: (id: string) =>
 		authRequest(`/admin/listings/${id}/approve`, { method: 'PATCH' }),
 	rejectListingRequest: (id: string) =>
@@ -327,6 +367,20 @@ export const adminApi = {
 	getSettings: () => authRequest('/admin/settings'),
 	updateSettings: (data: Record<string, unknown>) =>
 		authRequest('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
+
+	// Analytics
+	getAnalyticsSummary: (period?: string) =>
+		authRequest(`/analytics/summary${buildQuery({ period })}`),
+	getDeviceBreakdown: (period?: string) =>
+		authRequest(`/analytics/devices${buildQuery({ period })}`),
+	getTrafficSources: (period?: string) =>
+		authRequest(`/analytics/sources${buildQuery({ period })}`),
+	exportAnalyticsCsv: (period?: string) =>
+		authRequest(`/analytics/export/csv${buildQuery({ period })}`),
+	getPropertyAnalytics: (propertyId: string, period?: string) =>
+		authRequest(`/analytics/property/${propertyId}${buildQuery({ period })}`),
+	getConversionFunnel: (period?: string) =>
+		authRequest(`/analytics/funnel${buildQuery({ period })}`),
 };
 
 export default api;

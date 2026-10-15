@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from '@/navigation/legacy-router';
@@ -40,7 +40,7 @@ export default function NewArticle() {
     try {
       setLoading(true);
       const [categoriesRes, usersRes] = await Promise.all([
-        adminApi.getCategories(),
+        adminApi.getArticleCategories(),
         adminApi.getUsers(),
       ]);
       setCategories((categoriesRes as { data: Category[] }).data || []);
@@ -191,14 +191,14 @@ export default function NewArticle() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Category
+                Article Category
               </label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               >
-                <option value="">No category</option>
+                <option value="">Select Article Category</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}

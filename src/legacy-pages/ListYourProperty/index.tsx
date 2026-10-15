@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from '@/navigation/legacy-router';
 import { ArrowLeft } from 'lucide-react';
-import { rwandaDistricts, getSectors } from '../../data/rwandaDistricts';
+import { RWANDA_DISTRICTS, getSectorsByDistrict } from '../../data/rwandaAdministrativeDivisions';
 import { api } from '../../services/api';
 
 export default function ListYourProperty() {
@@ -247,7 +247,7 @@ export default function ListYourProperty() {
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   >
                     <option value="">Select district</option>
-                    {Object.values(rwandaDistricts).flatMap(province => Object.keys(province)).sort().map(d => (
+                    {RWANDA_DISTRICTS.map(d => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
@@ -272,7 +272,7 @@ export default function ListYourProperty() {
                     disabled={!formData.district}
                   >
                     <option value="">Select sector</option>
-                    {formData.district && getSectors(formData.district).map((s: string) => (
+                    {formData.district && getSectorsByDistrict(formData.district).map((s: string) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>

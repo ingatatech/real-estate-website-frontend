@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { adminApi } from '../../../services/api';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 
 interface Property {
   id: string;
@@ -49,23 +50,6 @@ interface ApiResponse {
   };
   message?: string;
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  AVAILABLE: 'bg-emerald-100 text-emerald-700',
-  SOLD: 'bg-blue-100 text-blue-700',
-  RENTED: 'bg-purple-100 text-purple-700',
-  LEASED: 'bg-indigo-100 text-indigo-700',
-  RESERVED: 'bg-amber-100 text-amber-700',
-  ARCHIVED: 'bg-gray-100 text-gray-500',
-};
-
-const PUB_COLORS: Record<string, string> = {
-  PUBLISHED: 'bg-green-100 text-green-700',
-  DRAFT: 'bg-yellow-100 text-yellow-700',
-  UNDER_REVIEW: 'bg-orange-100 text-orange-700',
-  APPROVED: 'bg-blue-100 text-blue-700',
-  ARCHIVED: 'bg-gray-100 text-gray-500',
-};
 
 const formatLabel = (value: string) => {
   return value
@@ -264,7 +248,7 @@ export default function Properties() {
 
         <Link
           to="/admin/properties/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 font-medium text-white shadow-sm transition hover:bg-emerald-700"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
         >
           <Plus className="h-5 w-5" />
           Add Property
@@ -513,23 +497,8 @@ export default function Properties() {
                       {/* Status */}
                       <td className="whitespace-nowrap px-5 py-4">
                         <div className="flex flex-col items-start gap-1">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              STATUS_COLORS[property.status] ??
-                              'bg-slate-100 text-slate-600'
-                            }`}
-                          >
-                            {formatLabel(property.status)}
-                          </span>
-
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              PUB_COLORS[property.publicationStatus] ??
-                              'bg-slate-100 text-slate-600'
-                            }`}
-                          >
-                            {formatLabel(property.publicationStatus)}
-                          </span>
+                          <StatusBadge status={property.status} />
+                          <StatusBadge status={property.publicationStatus} />
                         </div>
                       </td>
 
@@ -553,7 +522,7 @@ export default function Properties() {
                         <div className="flex justify-end gap-2">
                           <Link
                             to={`/admin/properties/${property.id}/edit`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
                             title="Edit property"
                           >
                             <Pencil className="h-3.5 w-3.5" /> Edit
@@ -562,7 +531,7 @@ export default function Properties() {
                           <button
                             type="button"
                             onClick={() => setDeleteId(property.id)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-medium text-rose-600 shadow-sm hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
                             title="Delete property"
                           >
                             <Trash2 className="h-3.5 w-3.5" /> Delete

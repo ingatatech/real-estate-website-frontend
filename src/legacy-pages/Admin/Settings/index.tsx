@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react';
 import {
@@ -47,24 +47,17 @@ interface HomepageSettings {
 
 interface SystemSettings {
   siteName: string;
-  siteTagline: string;
   logoUrl: string;
   faviconUrl: string;
-  timezone: string;
-  dateFormat: string;
-  language: string;
-  allowRegistration: boolean;
-  maintenanceMode: boolean;
 }
 
 interface SecuritySettings {
-  passwordMinLength: number;
+  sessionTimeout: number;
+  maxLoginAttempts: number;
   passwordRequireUppercase: boolean;
   passwordRequireLowercase: boolean;
   passwordRequireNumbers: boolean;
   passwordRequireSpecialChars: boolean;
-  sessionTimeout: number;
-  maxLoginAttempts: number;
   enableTwoFactor: boolean;
 }
 
@@ -110,7 +103,16 @@ const mergeSavedSettings = (saved: Record<string, unknown>, defaults: AllSetting
     logoUrl: typeof saved.logoUrl === 'string' ? saved.logoUrl : defaults.system.logoUrl,
     faviconUrl: typeof saved.faviconUrl === 'string' ? saved.faviconUrl : defaults.system.faviconUrl,
   },
-  security: defaults.security,
+  security: {
+    ...defaults.security,
+    sessionTimeout: typeof saved.sessionTimeout === 'number' ? saved.sessionTimeout : defaults.security.sessionTimeout,
+    maxLoginAttempts: typeof saved.maxLoginAttempts === 'number' ? saved.maxLoginAttempts : defaults.security.maxLoginAttempts,
+    passwordRequireUppercase: typeof saved.passwordRequireUppercase === 'boolean' ? saved.passwordRequireUppercase : defaults.security.passwordRequireUppercase,
+    passwordRequireLowercase: typeof saved.passwordRequireLowercase === 'boolean' ? saved.passwordRequireLowercase : defaults.security.passwordRequireLowercase,
+    passwordRequireNumbers: typeof saved.passwordRequireNumbers === 'boolean' ? saved.passwordRequireNumbers : defaults.security.passwordRequireNumbers,
+    passwordRequireSpecialChars: typeof saved.passwordRequireSpecialChars === 'boolean' ? saved.passwordRequireSpecialChars : defaults.security.passwordRequireSpecialChars,
+    enableTwoFactor: typeof saved.enableTwoFactor === 'boolean' ? saved.enableTwoFactor : defaults.security.enableTwoFactor,
+  },
 });
 
 export default function Settings() {
@@ -143,23 +145,16 @@ export default function Settings() {
     },
     system: {
       siteName: 'Ingata Real Estate',
-      siteTagline: 'Your Trusted Real Estate Partner',
       logoUrl: '',
       faviconUrl: '',
-      timezone: 'Africa/Kigali',
-      dateFormat: 'DD/MM/YYYY',
-      language: 'en',
-      allowRegistration: true,
-      maintenanceMode: false,
     },
     security: {
-      passwordMinLength: 8,
+      sessionTimeout: 30,
+      maxLoginAttempts: 5,
       passwordRequireUppercase: true,
       passwordRequireLowercase: true,
       passwordRequireNumbers: true,
       passwordRequireSpecialChars: true,
-      sessionTimeout: 30,
-      maxLoginAttempts: 5,
       enableTwoFactor: false,
     },
   });
@@ -262,6 +257,8 @@ export default function Settings() {
       security: { ...prev.security, [field]: value }
     }));
   };
+
+
 
   if (loading) {
     return (
@@ -772,18 +769,6 @@ export default function Settings() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Site Tagline
-                </label>
-                <input
-                  type="text"
-                  value={settings.system.siteTagline}
-                  onChange={(e) => handleSystemChange('siteTagline', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Logo URL
                 </label>
                 <input
@@ -807,135 +792,47 @@ export default function Settings() {
                   placeholder="https://example.com/favicon.ico"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Timezone
-                </label>
-                <select
-                  value={settings.system.timezone}
-                  onChange={(e) => handleSystemChange('timezone', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                >
-                  <option value="Africa/Kigali">Africa/Kigali</option>
-                  <option value="UTC">UTC</option>
-                  <option value="America/New_York">America/New_York</option>
-                  <option value="Europe/London">Europe/London</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Date Format
-                </label>
-                <select
-                  value={settings.system.dateFormat}
-                  onChange={(e) => handleSystemChange('dateFormat', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                >
-                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                  <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Language
-                </label>
-                <select
-                  value={settings.system.language}
-                  onChange={(e) => handleSystemChange('language', e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                >
-                  <option value="en">English</option>
-                  <option value="fr">French</option>
-                  <option value="rw">Kinyarwanda</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 pt-4 border-t border-slate-200">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.system.allowRegistration}
-                  onChange={(e) => handleSystemChange('allowRegistration', e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-sm text-slate-700">Allow User Registration</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.system.maintenanceMode}
-                  onChange={(e) => handleSystemChange('maintenanceMode', e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="text-sm text-slate-700">Maintenance Mode</span>
-              </label>
             </div>
           </div>
         </div>
       )}
 
-      {/* Security Settings Tab */}
       {activeTab === 'security' && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-2">Security Settings</h2>
             <p className="text-sm text-slate-500">
-              Configure password policies and security options.
+              Configure security and authentication settings.
             </p>
           </div>
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-4">Password Requirements</h3>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Minimum Password Length
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.security.passwordMinLength}
-                    onChange={(e) => handleSecurityChange('passwordMinLength', Number(e.target.value))}
-                    min="6"
-                    max="32"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Session Timeout (minutes)
+              </label>
+              <input
+                type="number"
+                value={settings.security.sessionTimeout}
+                onChange={(e) => handleSecurityChange('sessionTimeout', Number(e.target.value))}
+                min="5"
+                max="1440"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Session Timeout (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.security.sessionTimeout}
-                    onChange={(e) => handleSecurityChange('sessionTimeout', Number(e.target.value))}
-                    min="5"
-                    max="1440"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Max Login Attempts
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.security.maxLoginAttempts}
-                    onChange={(e) => handleSecurityChange('maxLoginAttempts', Number(e.target.value))}
-                    min="3"
-                    max="10"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Max Login Attempts
+              </label>
+              <input
+                type="number"
+                value={settings.security.maxLoginAttempts}
+                onChange={(e) => handleSecurityChange('maxLoginAttempts', Number(e.target.value))}
+                min="3"
+                max="10"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
             </div>
 
             <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-slate-200">

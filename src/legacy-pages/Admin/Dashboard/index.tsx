@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { adminApi } from '../../../services/api';
+import { AnalyticsSummaryCards } from '../../../components/admin/AnalyticsSummaryCards';
 
 interface DashboardStats {
   totalProperties: number;
@@ -53,7 +54,7 @@ interface RecentInquiry {
   id: string;
   name: string;
   email: string;
-  message: string;
+  inquiry: string;
   status: string;
   createdAt: string;
   property: { title: string; slug: string } | null;
@@ -159,6 +160,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [supportError, setSupportError] = useState(false);
   const [supportLoading, setSupportLoading] = useState(false);
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('30days');
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -321,6 +323,8 @@ export default function AdminDashboard() {
       <section aria-label="Key performance indicators" className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 2xl:grid-cols-6">
         {statCards.map((card) => <StatCard key={card.label} {...card} />)}
       </section>
+
+      <AnalyticsSummaryCards period={analyticsPeriod} onPeriodChange={setAnalyticsPeriod} />
 
       <section className="grid gap-6 xl:grid-cols-5">
         <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 xl:col-span-3">
@@ -487,7 +491,7 @@ export default function AdminDashboard() {
                       <StatusBadge status={inquiry.status} />
                     </div>
                     <p className="mt-1 truncate text-xs text-slate-600">{inquiry.property?.title || 'General inquiry'}</p>
-                    {inquiry.message && <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{inquiry.message}</p>}
+                    {inquiry.inquiry && <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{inquiry.inquiry}</p>}
                     <p className="mt-2 flex items-center gap-1 text-xs text-slate-400"><Clock className="h-3 w-3" />{formatDate(inquiry.createdAt)}</p>
                   </div>
                 </article>

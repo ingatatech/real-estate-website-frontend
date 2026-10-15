@@ -7,6 +7,8 @@ import { BedDouble, Bath, MapPin, Ruler, ArrowLeft, Maximize2, Share2, Phone, Ma
 import api from '../../services/api';
 import { ImageViewer } from '../../components/ImageViewer';
 import { TestPropertyNotice } from '../../components/property/TestPropertyBadge';
+import PropertyMap from '../../components/shared/PropertyMap';
+import { useGoogleMaps } from '../../hooks/useGoogleMaps';
 
 type InquiryForm = {
   name: string;
@@ -15,7 +17,7 @@ type InquiryForm = {
   preferredContactMethod: string;
   preferredViewingDate: string;
   preferredContactTime: string;
-  message: string;
+  inquiry: string;
 };
 
 type Media = { id: string; imageUrl: string; mediaType?: 'IMAGE' | 'VIDEO'; caption?: string };
@@ -25,6 +27,8 @@ type ViewingRequestForm = {
   phone: string;
   preferredDate: string;
   preferredTime: string;
+  numberOfVisitors: string;
+  message: string;
 };
 type Property = { 
   id: string;
@@ -106,16 +110,19 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
     preferredContactMethod: 'email',
     preferredViewingDate: '',
     preferredContactTime: '',
-    message: ''
+    inquiry: ''
   });
   const [inquirySubmitted, setInquirySubmitted] = useState(false);
   const [inquiryError, setInquiryError] = useState('');
+  const { isLoaded: mapsLoaded } = useGoogleMaps();
   const [viewingForm, setViewingForm] = useState<ViewingRequestForm>({
     name: '',
     email: '',
     phone: '',
     preferredDate: '',
     preferredTime: '',
+    numberOfVisitors: '',
+    message: '',
   });
   const [viewingSubmitted, setViewingSubmitted] = useState(false);
   const [viewingSubmitting, setViewingSubmitting] = useState(false);
@@ -151,7 +158,7 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
     if (!(property?.referenceNumber || property?.id)) return 'Property Reference is required';
     if (!property?.title) return 'Property of Interest is required';
     if (!inquiryForm.preferredContactMethod) return 'Preferred Contact Method is required';
-    if (!inquiryForm.message.trim()) return 'Message is required';
+    if (!inquiryForm.inquiry.trim()) return 'Inquiry is required';
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(inquiryForm.email)) return 'Please enter a valid email address';
@@ -178,7 +185,7 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
         email: inquiryForm.email,
         phone: inquiryForm.phone,
         propertyId: property?.id,
-        message: inquiryForm.message
+        inquiry: inquiryForm.inquiry
       });
       setInquirySubmitted(true);
     } catch (err) {
@@ -422,13 +429,27 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
                   <MapPin className="h-5 w-5 text-emerald-600 mt-0.5" />
                   <div>
                     <p className="font-medium">{location || 'Location not specified'}</p>
+                  </div>
+                </div>
+                {property.latitude != null && property.longitude != null && mapsLoaded && (
+                  <div className="mt-4">
+                    <PropertyMap
+                      latitude={property.latitude}
+                      longitude={property.longitude}
+                      title={property.title}
+                    />
                     {mapUrl && (
-                      <a href={mapUrl} target="_blank" rel="noreferrer" className="inline-block mt-2 text-emerald-600 text-sm hover:underline">
+                      <a
+                        href={mapUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-block mt-3 text-emerald-600 text-sm hover:underline"
+                      >
                         View on Google Maps
                       </a>
                     )}
                   </div>
-                </div>
+                )}
                 {property.area && (
                   <div className="text-sm text-slate-600">
                     <span className="font-medium">Area:</span> {property.area}
@@ -655,6 +676,30 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
                       </select>
                     </div>
                   </div>
+                  <div>
+                    <label htmlFor="viewing-visitors" className="mb-1 block text-xs font-medium text-slate-600">Number of Visitors</label>
+                    <input
+                      id="viewing-visitors"
+                      type="number"
+                      min="1"
+                      required
+                      value={viewingForm.numberOfVisitors}
+                      onChange={(event) => setViewingForm({ ...viewingForm, numberOfVisitors: event.target.value })}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                      placeholder="e.g., 2"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="viewing-message" className="mb-1 block text-xs font-medium text-slate-600">Additional Message</label>
+                    <textarea
+                      id="viewing-message"
+                      rows={3}
+                      value={viewingForm.message}
+                      onChange={(event) => setViewingForm({ ...viewingForm, message: event.target.value })}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                      placeholder="Any additional information or requests..."
+                    />
+                  </div>
                   {viewingError && (
                     <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
                       {viewingError}
@@ -793,8 +838,8 @@ export default function PropertyDetails({ propertySlug: propSlug }: { propertySl
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Message *</label>
                     <textarea
-                      value={inquiryForm.message}
-                      onChange={(e) => setInquiryForm({ ...inquiryForm, message: e.target.value })}
+                      value={inquiryForm.inquiry}
+                      onChange={(e) => setInquiryForm({ ...inquiryForm, inquiry: e.target.value })}
                       rows={3}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500"
                       placeholder="I'm interested in this property and would like to..."

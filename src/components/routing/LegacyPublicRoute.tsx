@@ -63,6 +63,7 @@ const staticRoutes: Record<string, ComponentType> = {
   '/insights/property-guides': PropertyGuides,
   '/legal/cookie-policy': CookiePolicy,
   '/legal/privacy-policy': PrivacyPolicy,
+  '/legal/property-disclaimer': PropertyDisclaimer,
   '/legal/property-listing-disclaimer': PropertyDisclaimer,
   '/legal/terms-and-conditions': TermsAndConditions,
   '/mortgage-calculator': MortgageCalculator,

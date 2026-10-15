@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from '@/navigation/legacy-router';
@@ -21,17 +21,23 @@ import {
   X,
   ChevronRight,
   User,
+  BarChart3,
+  Briefcase,
+  Mail,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/admin/properties', icon: Home, label: 'Properties' },
   { to: '/admin/categories', icon: Tag, label: 'Categories' },
   { to: '/admin/listings', icon: ClipboardList, label: 'Property Requests' },
   { to: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
+  { to: '/admin/contact', icon: Mail, label: 'Contact Messages' },
   { to: '/admin/viewings', icon: Calendar, label: 'Viewings' },
   { to: '/admin/valuations', icon: TrendingUp, label: 'Valuations' },
+  { to: '/admin/services', icon: Briefcase, label: 'Services' },
   { to: '/admin/articles', icon: FileText, label: 'Articles' },
   { to: '/admin/faqs', icon: HelpCircle, label: 'FAQs' },
   { to: '/admin/testimonials', icon: Star, label: 'Testimonials' },
