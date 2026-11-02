@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { BedDouble, Bath, MapPin, Ruler, ArrowLeft, Maximize2, Share2, Phone, Mail, Calendar, Check, Video, Home, Shield, Wifi, Car, Droplets, Zap, Flame, Heart, Scale } from 'lucide-react';
 import api from '@/services/api';
@@ -9,9 +10,12 @@ import { ImageViewer } from '@/components/ImageViewer';
 import { TestPropertyNotice } from '@/components/property/TestPropertyBadge';
 import { usePropertyViewTracking, trackClickEvent } from '@/utils/analytics';
 import { PropertyStructuredData } from '@/components/seo/PropertyStructuredData';
-import PropertyMap from '@/components/map/PropertyMap';
 import { usePropertyComparison } from '@/hooks/usePropertyComparison';
 import { useFavorites } from '@/hooks/useFavorites';
+
+const PropertyMap = dynamic(() => import('@/components/map/PropertyMap'), {
+  ssr: false,
+});
 
 type InquiryForm = {
   name: string;
