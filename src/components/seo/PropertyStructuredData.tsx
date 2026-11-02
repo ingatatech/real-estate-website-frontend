@@ -1,5 +1,6 @@
 interface PropertyStructuredDataProps {
   property: {
+    id?: string
     title: string
     description?: string | null
     price?: string | number | null
@@ -24,7 +25,7 @@ interface PropertyStructuredDataProps {
 
 export function PropertyStructuredData({ property }: PropertyStructuredDataProps) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ingata-real-estate.com'
-  const propertyUrl = property.url || `${baseUrl}/properties/${property.title.toLowerCase().replace(/\s+/g, '-')}`
+  const propertyUrl = property.url || (property.id ? `${baseUrl}/properties/${encodeURIComponent(property.id)}` : `${baseUrl}/properties`)
 
   const primaryImage = property.propertyImages?.find((img) => img.isPrimary)?.imageUrl || property.propertyImages?.[0]?.imageUrl
 

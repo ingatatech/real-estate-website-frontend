@@ -343,7 +343,7 @@ export default function FavoritesContent() {
                       </div>
 
                       <Link
-                        href={`/properties/${p.slug}`}
+                        href={`/properties/${encodeURIComponent(p.id)}`}
                         className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
                       >
                         <span>View Details</span>

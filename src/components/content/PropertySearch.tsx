@@ -315,7 +315,7 @@ export default function PropertySearch() {
             <p className="mt-2 text-sm text-slate-600">
               {property.bedrooms ?? 0} beds · {property.bathrooms ?? 0} baths · {property.size ? `${property.size} ${property.sizeUnit === 'sqm' ? 'm²' : property.sizeUnit === 'sqft' ? 'ft²' : property.sizeUnit === 'acres' ? 'acres' : property.sizeUnit === 'hectares' ? 'hectares' : property.sizeUnit || 'sqm'}` : 'Size unavailable'}
             </p>
-            <Link href={`/properties/${property.slug}`} className="mt-4 inline-block font-semibold text-brand-emerald">View property</Link>
+            <Link href={`/properties/${encodeURIComponent(property.id)}`} className="mt-4 inline-block font-semibold text-brand-emerald">View property</Link>
           </article>
         ))}
       </section>

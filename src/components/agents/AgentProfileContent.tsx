@@ -71,7 +71,7 @@ export default function AgentProfileContent({ agentSlug }: AgentProfileContentPr
           {agent.properties?.length ? (
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {agent.properties.map((property) => (
-                <Link key={property.id} href={`/properties/${encodeURIComponent(property.slug)}`} className="rounded-lg border border-slate-200 bg-white p-5 hover:border-emerald-500">
+                <Link key={property.id} href={`/properties/${encodeURIComponent(property.id)}`} className="rounded-lg border border-slate-200 bg-white p-5 hover:border-emerald-500">
                   <h3 className="font-semibold text-slate-900">{property.title}</h3>
                   {property.location && <p className="mt-2 text-sm text-slate-600">{property.location}</p>}
                 </Link>

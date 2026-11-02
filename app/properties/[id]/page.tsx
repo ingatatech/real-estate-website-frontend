@@ -1,19 +1,20 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import PropertyDetails from '@/components/content/PropertyDetails'
 import { generatePropertyMetadata } from '@/utils/metadata'
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ propertySlug: string }>
+  params: Promise<{ id: string }>
 }): Promise<Metadata> {
-  const { propertySlug } = await params
+  const { id } = await params
 
   // Fetch property data for dynamic metadata
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
-    const response = await fetch(`${apiUrl}/properties/${propertySlug}`, {
+    const response = await fetch(`${apiUrl}/properties/id/${encodeURIComponent(id)}`, {
       next: { revalidate: 3600 },
     })
 
@@ -32,7 +33,7 @@ export async function generateMetadata({
           location: property.location || property.district,
           propertyType: property.propertyType,
           transactionType: property.transactionType,
-          slug: property.slug,
+          slug: property.id,
         })
       }
     }
@@ -47,16 +48,30 @@ export async function generateMetadata({
   }
 }
 
+async function propertyExists(id: string) {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+    const response = await fetch(`${apiUrl}/properties/id/${encodeURIComponent(id)}`, {
+      next: { revalidate: 60 },
+    })
+    return response.status !== 404 && response.ok
+  } catch {
+    return true
+  }
+}
+
 export default async function PropertyDetailsPage({
   params,
 }: {
-  params: Promise<{ propertySlug: string }>
+  params: Promise<{ id: string }>
 }) {
-  const { propertySlug } = await params
+  const { id } = await params
+  if (!id) notFound()
+  if (!(await propertyExists(id))) notFound()
 
   return (
     <Suspense fallback={<main className="mx-auto max-w-7xl px-4 py-16 text-slate-500">Loading property…</main>}>
-      <PropertyDetails propertySlug={propertySlug} />
+      <PropertyDetails propertyId={id} />
     </Suspense>
   )
 }

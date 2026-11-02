@@ -158,7 +158,7 @@ export function PropertyCard({ property }: { property: PropertyProps }) {
       </CardBody>
       
       <CardFooter className="bg-white border-t-0 pt-0">
-        <Link href={`/properties/${property.slug}`} className="block w-full">
+        <Link href={`/properties/${property.id}`} className="block w-full">
           <Button variant="secondary" className="w-full">View Details</Button>
         </Link>
       </CardFooter>

@@ -483,7 +483,7 @@ export default function Properties() {
                   return (
                     <Link
                       key={property.id}
-                      href={`/properties/${property.slug}`}
+                      href={`/properties/${encodeURIComponent(property.id)}`}
                       className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group"
                     >
                       {/* Image */}
@@ -574,7 +574,7 @@ export default function Properties() {
                       return (
                         <Link
                           key={property.id}
-                          href={`/properties/${property.slug}`}
+                          href={`/properties/${encodeURIComponent(property.id)}`}
                           className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group flex"
                         >
                           {/* Image */}

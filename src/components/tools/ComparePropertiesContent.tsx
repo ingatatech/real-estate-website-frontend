@@ -33,16 +33,16 @@ export default function ComparePropertiesContent() {
 
   const handleAddBySlug = async (e: React.FormEvent) => {
     e.preventDefault()
-    const cleanSlug = slugInput.trim().replace(/^.*\/properties\//, '')
-    if (!cleanSlug) return
+    const propertyId = slugInput.trim().replace(/^.*\/properties\//, '').replace(/\/$/, '')
+    if (!propertyId) return
 
     setAddError('')
     setIsAdding(true)
 
     try {
-      const res = (await api.getProperty(cleanSlug)) as { data: any }
+      const res = (await api.getProperty(propertyId)) as { data: any }
       if (!res?.data) {
-        setAddError('Property not found. Please enter a valid property slug.')
+        setAddError('Property not found. Please enter a valid property ID.')
         return
       }
 
@@ -64,7 +64,7 @@ export default function ComparePropertiesContent() {
         amenities: p.amenities || [],
         furnishingStatus: p.furnishingStatus,
         status: p.status,
-        slug: p.slug || cleanSlug,
+        slug: p.slug || p.id,
       })
 
       if (!result.success) {
@@ -129,14 +129,14 @@ export default function ComparePropertiesContent() {
           )}
         </div>
 
-        {/* Add property by slug search bar */}
+        {/* Add property by ID search bar */}
         <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 mb-8">
           <form onSubmit={handleAddBySlug} className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={slugInput}
               onChange={(e) => setSlugInput(e.target.value)}
-              placeholder="Add another property by slug (e.g. luxury-villa-in-kigali)"
+              placeholder="Add another property by ID (or /properties/ID URL)"
               className="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
               disabled={comparingProperties.length >= 5 || isAdding}
             />
@@ -215,7 +215,7 @@ export default function ComparePropertiesContent() {
                             </p>
 
                             <Link
-                              href={`/properties/${p.slug}`}
+                              href={`/properties/${encodeURIComponent(p.id)}`}
                               className="inline-flex items-center justify-center gap-1 w-full py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
                             >
                               <span>View Listing</span>

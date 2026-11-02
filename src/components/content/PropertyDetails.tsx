@@ -95,7 +95,7 @@ const getLocalDateString = () => {
   return `${year}-${month}-${day}`;
 };
 
-export default function PropertyDetails({ propertySlug }: { propertySlug: string }) {
+export default function PropertyDetails({ propertyId }: { propertyId: string }) {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -125,8 +125,8 @@ export default function PropertyDetails({ propertySlug }: { propertySlug: string
   const [viewingError, setViewingError] = useState('');
 
   useEffect(() => {
-    if (propertySlug) {
-      api.getProperty(propertySlug)
+    if (propertyId) {
+      api.getProperty(propertyId)
         .then((r) => {
           const prop = (r as { data: Property }).data;
           setProperty(prop);
@@ -145,7 +145,7 @@ export default function PropertyDetails({ propertySlug }: { propertySlug: string
         .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unable to load this property.'))
         .finally(() => setLoading(false));
     }
-  }, [propertySlug]);
+  }, [propertyId]);
 
   // Track property view with session duration
   usePropertyViewTracking(property?.id || '');
@@ -233,7 +233,7 @@ export default function PropertyDetails({ propertySlug }: { propertySlug: string
   if (loading) return <main className="mx-auto max-w-7xl px-4 py-16 text-slate-500">Loading property…</main>;
   if (error || !property) return <main className="mx-auto max-w-7xl px-4 py-16 text-red-600">{error || 'Property not found.'}</main>;
 
-  const media = property.propertyImages || [];
+  const media = (property.propertyImages || []).filter((item) => Boolean(item?.imageUrl));
   const location = [property.address, property.neighborhood, property.sector, property.district, property.location].filter(Boolean).join(', ');
   const mapUrl = property.latitude != null && property.longitude != null
     ? `https://www.google.com/maps?q=${property.latitude},${property.longitude}`
@@ -643,7 +643,7 @@ export default function PropertyDetails({ propertySlug }: { propertySlug: string
                     return (
                       <Link
                         key={related.id}
-                        href={`/properties/${related.slug}`}
+                        href={`/properties/${related.id}`}
                         className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow"
                       >
                         {primaryImage ? (

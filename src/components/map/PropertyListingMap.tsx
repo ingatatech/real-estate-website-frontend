@@ -75,7 +75,7 @@ const createPopupContent = (property: Property): string => {
         <span>📐 ${size}</span>
       </div>
       <a 
-        href="/properties/${property.slug}" 
+        href="/properties/${property.id}"
         style="display: inline-block; background: #10b981; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500;"
       >
         View Details

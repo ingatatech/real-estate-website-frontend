@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -74,7 +74,7 @@ export function CategoryListing({ title, query }: CategoryListingProps) {
           {properties.map((property) => (
             <Link
               key={property.id}
-              href={`/properties/${property.slug}`}
+              href={`/properties/${encodeURIComponent(property.id)}`}
               className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
             >
               <div className="relative overflow-hidden">
