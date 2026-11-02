@@ -1,12 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Search, SlidersHorizontal, ArrowUpDown, MapPin, BedDouble, Bath, Ruler, X, LayoutGrid, Map, Columns } from 'lucide-react';
 import api from '@/services/api';
 import { TestPropertyBadge, TestPropertyNotice } from './TestPropertyBadge';
-import PropertyListingMap from '@/components/map/PropertyListingMap';
+
+const PropertyListingMap = dynamic(() => import('@/components/map/PropertyListingMap'), {
+  ssr: false,
+});
 
 type Property = {
   id: string;

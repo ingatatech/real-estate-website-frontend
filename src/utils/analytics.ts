@@ -111,9 +111,8 @@ export const trackClickEvent = async (
 
 // React hook for tracking page views on route changes
 export const usePageViewTracking = (pageTitle?: string) => {
-  if (typeof window === 'undefined') return;
-
   React.useEffect(() => {
+    if (typeof window === 'undefined') return;
     const pagePath = window.location.pathname;
     trackPageView(pagePath, pageTitle);
   }, [pageTitle]);
@@ -121,9 +120,8 @@ export const usePageViewTracking = (pageTitle?: string) => {
 
 // React hook for tracking property views
 export const usePropertyViewTracking = (propertyId: string) => {
-  if (typeof window === 'undefined') return;
-
   React.useEffect(() => {
+    if (typeof window === 'undefined') return;
     // One property-view event represents one detail-page visit. Recording again on
     // unmount inflated view totals because the API treats it as a separate visit.
     if (propertyId) trackPropertyView(propertyId);
@@ -144,5 +142,4 @@ export const withClickTracking = (
     handler();
   };
 };
-
 
