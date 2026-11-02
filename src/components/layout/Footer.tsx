@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { CookieSettingsButton } from '../consent/ConsentManager';
 
 export function Footer() {
+  const copyrightYear = 2026;
   return (
     <footer className="bg-slate-900 text-slate-300 py-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -134,7 +135,7 @@ export function Footer() {
         <div className="border-t border-slate-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-slate-500">
-              © {new Date().getFullYear()} Ingata Real Estate. All rights reserved.
+              © {copyrightYear} Ingata Real Estate. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm text-slate-500">
               <Link href="/legal/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>

@@ -78,10 +78,9 @@ const viewingTimeOptions = Array.from({ length: 17 }, (_, index) => {
   const hours = Math.floor(minutes / 60);
   const minute = minutes % 60;
   const value = `${String(hours).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-  const label = new Date(2000, 0, 1, hours, minute).toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const displayHour = hours % 12 || 12;
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const label = `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
 
   return { value, label };
 });
@@ -123,10 +122,17 @@ export default function PropertyDetails({ propertyId }: { propertyId: string }) 
   const [viewingSubmitted, setViewingSubmitted] = useState(false);
   const [viewingSubmitting, setViewingSubmitting] = useState(false);
   const [viewingError, setViewingError] = useState('');
+  const { toggleComparison, isComparing } = usePropertyComparison();
+  const { toggleFavorite, isFavorited } = useFavorites();
 
   useEffect(() => {
-    if (propertyId) {
-      api.getProperty(propertyId)
+    if (!propertyId) return;
+
+    setLoading(true);
+    setError('');
+    setProperty(null);
+
+    api.getProperty(propertyId)
         .then((r) => {
           const prop = (r as { data: Property }).data;
           setProperty(prop);
@@ -144,7 +150,6 @@ export default function PropertyDetails({ propertyId }: { propertyId: string }) 
         })
         .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Unable to load this property.'))
         .finally(() => setLoading(false));
-    }
   }, [propertyId]);
 
   // Track property view with session duration
@@ -252,9 +257,6 @@ export default function PropertyDetails({ propertyId }: { propertyId: string }) 
     'security': Shield,
     'furnished': Home,
   };
-
-  const { toggleComparison, isComparing } = usePropertyComparison();
-  const { toggleFavorite, isFavorited } = useFavorites();
 
   const isCompared = property ? isComparing(property.id) : false;
   const isFav = property ? isFavorited(property.id) : false;
